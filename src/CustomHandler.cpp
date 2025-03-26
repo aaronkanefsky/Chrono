@@ -1,39 +1,71 @@
 #include "CustomHandler.h"
 
 CustomHandler::CustomHandler(const std::string& topic_pub, const std::string& topic_sub)
-: ChROSHandler(1), m_topic_pub(topic_pub), m_topic_sub(topic_sub), m_ticker(0), Node("Chrono_Subscriber") 
+    : rclcpp::Node("chrono_subscriber"), ChROSHandler(1),
+      m_topic_pub(topic_pub), m_topic_sub(topic_sub), m_ticker(0) 
 {
+    std::cout << "Initializing CustomHandler with topics: "
+              << "Publish: " << m_topic_pub << ", Subscribe: " << m_topic_sub << std::endl;
 }
 
-bool CustomHandler::Initialize(std::shared_ptr<ChROSInterface> interface){
-    std::cout << "Creating publisher for topic '" << m_topic_pub  << "' ..." << std::endl;
+bool CustomHandler::Initialize(std::shared_ptr<ChROSInterface> interface) {
+    std::cout << "Creating publisher for topic '" << m_topic_pub << "' ..." << std::endl;
     std::cout << "Creating subscriber for topic '" << m_topic_sub << "' ..." << std::endl;
-    m_publisher = interface->GetNode()->create_publisher<std_msgs::msg::String>(m_topic_pub, 1);
-    m_subscriber = interface->GetNode()->create_subscription<std_msgs::msg::String>(m_topic_sub, 10, std::bind(&CustomHandler::topic_callback, this, _1));
+
+    // Publisher for PX4 VehicleOdometry messages
+    m_publisher = this->create_publisher<px4_msgs::msg::VehicleOdometry>(m_topic_pub, 10);
+    std::cout << "Publisher for " << m_topic_pub << " created." << std::endl;
+
+    // Subscriber for PX4 VehicleOdometry messages
+    m_subscriber = this->create_subscription<px4_msgs::msg::VehicleOdometry>(
+        m_topic_sub, 10, std::bind(&CustomHandler::topic_callback, this, _1)
+    );
+    std::cout << "Subscriber for " << m_topic_sub << " created." << std::endl;
 
     return true;
 }
 
 void CustomHandler::Tick(double time) {
-    std::cout << "Publishing..." << m_publisher << std::endl;
+    std::cout << "Publishing..." << std::endl;
 
-    // Create custom data instance
-    MyData custom_data(42, 3.14, "Custom Data Example");
+    // Create a VehicleOdometry message instance
+    px4_msgs::msg::VehicleOdometry msg;
+    msg.timestamp = this->now().nanoseconds() / 1000;  // Convert to microseconds
+    msg.timestamp_sample = static_cast<uint64_t>(time * 1e6);  // Use time argument for sample timestamp
+    msg.pose_frame = px4_msgs::msg::VehicleOdometry::POSE_FRAME_NED;  
+    msg.velocity_frame = px4_msgs::msg::VehicleOdometry::VELOCITY_FRAME_BODY_FRD;
 
-    // Serialize custom data to a string (this can be changed as per your needs)
-    std::string data_string = custom_data.toString();
+    msg.position[0] = 1.0;  // x
+    msg.position[1] = 2.0;  // y
+    msg.position[2] = 3.0;  // z
+    msg.q[0] = 1.0;  // w
+    msg.q[1] = 0.0;  // x
+    msg.q[2] = 0.0;  // y
+    msg.q[3] = 0.0;  // z
+    msg.velocity[0] = 0.1;  // vx
+    msg.velocity[1] = 0.2;  // vy
+    msg.velocity[2] = 0.3;  // vz
+    msg.angular_velocity[0] = 0.01;  // roll rate
+    msg.angular_velocity[1] = 0.02;  // pitch rate
+    msg.angular_velocity[2] = 0.03;  // yaw rate
+    msg.position_variance[0] = 0.01;
+    msg.position_variance[1] = 0.01;
+    msg.position_variance[2] = 0.01;
+    msg.velocity_variance[0] = 0.1;
+    msg.velocity_variance[1] = 0.1;
+    msg.velocity_variance[2] = 0.1;
 
-    // Publish the serialized data as a string message
-    std_msgs::msg::String msg;
-    msg.data = data_string;
+    // Log the data
+    std::cout << "Publishing VehicleOdometry message with timestamp: " << msg.timestamp << std::endl;
+
+    // Publish the message
     m_publisher->publish(msg);
 
-    // If you want to remove ticker-based limit, don't use m_ticker or just increment without restricting it
     m_ticker++;
 }
 
-
-void CustomHandler::topic_callback(const std_msgs::msg::String::SharedPtr msg) const
-{
-    RCLCPP_INFO(this->get_logger(), "I heard: '%s'", msg->data.c_str());
+void CustomHandler::topic_callback(const px4_msgs::msg::VehicleOdometry::SharedPtr msg) const {
+    std::cout << "Received message in topic_callback." << std::endl;
+    RCLCPP_INFO(this->get_logger(), "Received odometry data: x = %.2f, y = %.2f, z = %.2f", 
+                msg->position[0], msg->position[1], msg->position[2]);
 }

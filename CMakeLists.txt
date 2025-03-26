@@ -9,18 +9,23 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(Chrono_DIR "/home/aaron/Documents/acsl-chrono-simulator/libraries/chrono-build/cmake")
 set(PROJ_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/inc)
+set(MESSAGE_INCLUDE_DIR "/home/aaron/px4_msgs-build/install/px4_msgs")
+
+# Set the CMake prefix path to include the directory where px4_msgsConfig.cmake is located
+set(CMAKE_PREFIX_PATH "/home/aaron/px4_msgs-build/install/px4_msgs/share:$ENV{CMAKE_PREFIX_PATH}")
+
+# Ensure px4_msgs is found by finding its config
+find_package(px4_msgs REQUIRED)
 
 find_package(Chrono REQUIRED COMPONENTS Irrlicht ROS OPTIONAL_COMPONENTS CONFIG REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 
 if (NOT Chrono_FOUND)
   message(FATAL_ERROR "Could not find Chrono or one of its required modules")
 endif()
-
-find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
 
 link_directories(/opt/ros/galactic/lib)
 
@@ -31,11 +36,12 @@ include_directories(
   /home/aaron/Documents/acsl-chrono-simulator/libraries/chrono/src
   /opt/ros/galactic/include
   ${PROJ_INCLUDE_DIR}  # Include the 'inc' directory
+  ${MESSAGE_INCLUDE_DIR}/include/px4_msgs/msg  # Ensure px4_msgs is correctly included
 )
 
 add_executable(custom_handler main.cpp src/CustomHandler.cpp)  # Add your custom cpp file here
 
-ament_target_dependencies(custom_handler rclcpp std_msgs)
+ament_target_dependencies(custom_handler rclcpp std_msgs px4_msgs)
 
 target_compile_definitions(custom_handler PRIVATE "CHRONO_DATA_DIR=\"${Chrono_DIR}\"")
 

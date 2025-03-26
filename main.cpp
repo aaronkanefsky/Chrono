@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     auto ros_manager = chrono_types::make_shared<ChROSManager>();
 
     // Create a custom handler
-    auto custom_handler = chrono_types::make_shared<CustomHandler>("topic_out", "topic_in");
+    auto custom_handler = chrono_types::make_shared<CustomHandler>("default", "default");
     ros_manager->RegisterHandler(custom_handler);
 
     // Finally, initialize the ros manager
