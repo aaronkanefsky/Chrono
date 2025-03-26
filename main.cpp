@@ -27,11 +27,11 @@ int main(int argc, char* argv[]) {
     // Simulation
     double time = 0;
     constexpr double step_size = 2e-3;
-    constexpr double time_end = 1000;
+
 
     // Simulation loop
     ChRealtimeStepTimer realtime_timer;
-    while (time < time_end) {
+    while (1) {
         time = sys.GetChTime();
 
         // Updates
