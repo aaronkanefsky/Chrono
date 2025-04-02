@@ -13,21 +13,24 @@ bool CustomHandler::Initialize(std::shared_ptr<ChROSInterface> interface) {
     std::cout << "Creating subscriber for topic '" << m_topic_sub << "' ..." << std::endl;
 
     // Publisher for PX4 VehicleOdometry messages
-    m_publisher = this->create_publisher<px4_msgs::msg::VehicleOdometry>(m_topic_pub, 10);
+    m_publisher = this->create_publisher<px4_msgs::msg::VehicleOdometry>(m_topic_pub, 1000);
     std::cout << "Publisher for " << m_topic_pub << " created." << std::endl;
 
     // Subscriber for PX4 VehicleOdometry messages
     m_subscriber = this->create_subscription<px4_msgs::msg::VehicleOdometry>(
-        m_topic_sub, 10, std::bind(&CustomHandler::topic_callback, this, _1)
+        m_topic_sub, 1000, std::bind(&CustomHandler::topic_callback, this, _1)
     );
     std::cout << "Subscriber for " << m_topic_sub << " created." << std::endl;
+    
 
     return true;
 }
 
-void CustomHandler::Tick(double time) {
-    std::cout << "Publishing..." << std::endl;
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 
+void CustomHandler::Tick(double time) {
     // Create a VehicleOdometry message instance
     px4_msgs::msg::VehicleOdometry msg;
     msg.timestamp = this->now().nanoseconds() / 1000;  // Convert to microseconds
@@ -55,8 +58,16 @@ void CustomHandler::Tick(double time) {
     msg.velocity_variance[1] = 0.1;
     msg.velocity_variance[2] = 0.1;
 
-    // Log the data
-    std::cout << "Publishing VehicleOdometry message with timestamp: " << msg.timestamp << std::endl;
+    // Convert timestamp (in microseconds) to time point
+    auto timestamp_timepoint = std::chrono::system_clock::from_time_t(msg.timestamp / 1000000);
+
+    // Convert time point to human-readable date/time format
+    std::time_t timestamp_t = std::chrono::system_clock::to_time_t(timestamp_timepoint);
+    std::stringstream time_stream;
+    time_stream << std::put_time(std::localtime(&timestamp_t), "%Y-%m-%d %H:%M:%S");
+    std::string formatted_time = time_stream.str();
+
+    std::cout << "Publishing VehicleOdometry message with timestamp: " << formatted_time << std::endl;
 
     // Publish the message
     m_publisher->publish(msg);
@@ -65,7 +76,6 @@ void CustomHandler::Tick(double time) {
 }
 
 void CustomHandler::topic_callback(const px4_msgs::msg::VehicleOdometry::SharedPtr msg) const {
-    std::cout << "Received message in topic_callback." << std::endl;
     RCLCPP_INFO(this->get_logger(), "Received odometry data: x = %.2f, y = %.2f, z = %.2f", 
                 msg->position[0], msg->position[1], msg->position[2]);
 }
