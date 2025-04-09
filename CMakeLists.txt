@@ -13,6 +13,7 @@ set(MESSAGE_INCLUDE_DIR "/home/aaron/px4_msgs-build/install/px4_msgs")
 
 # Set the CMake prefix path to include the directory where px4_msgsConfig.cmake is located
 set(CMAKE_PREFIX_PATH "/home/aaron/px4_msgs-build/install/px4_msgs/share:$ENV{CMAKE_PREFIX_PATH}")
+set(px4_msgs_DIR "/home/aaron/px4_msgs-build/install/px4_msgs/share/px4_msgs/cmake")
 
 # Ensure px4_msgs is found by finding its config
 find_package(px4_msgs REQUIRED)
