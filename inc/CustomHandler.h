@@ -19,6 +19,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "px4_msgs/msg/vehicle_odometry.hpp"
+#include "tutorial_interfaces/msg/num.hpp"
 #include <chrono>  // THIS IS NOT THE ROSCHRONO LIBRARY, THIS IS TIME
 
 using namespace chrono;
