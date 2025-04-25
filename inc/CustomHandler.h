@@ -51,6 +51,7 @@ private:
     rclcpp::Subscription<px4_msgs::msg::ActuatorMotors>::SharedPtr m_subscriber;
     int m_ticker = 0;
     rclcpp::TimerBase::SharedPtr m_timer; 
+    float tempTime = 0;
 
     void receiveTopic(px4_msgs::msg::ActuatorMotors::SharedPtr msg) const;
     MyData create_custom_data() const;

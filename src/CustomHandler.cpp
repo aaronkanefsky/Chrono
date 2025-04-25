@@ -37,10 +37,12 @@ void CustomHandler::Tick(double time) {
     msg.timestamp_sample = static_cast<uint64_t>(time * 1e6);  // Use time argument for sample timestamp
     msg.pose_frame = px4_msgs::msg::VehicleOdometry::POSE_FRAME_NED;  
     msg.velocity_frame = px4_msgs::msg::VehicleOdometry::VELOCITY_FRAME_BODY_FRD;
+    
 
-    msg.position[0] = 1.0;  // x
-    msg.position[1] = 2.0;  // y
-    msg.position[2] = 3.0;  // z
+    tempTime += 0.01;
+    msg.position[0] = 1.0 + tempTime;  // x
+    msg.position[1] = 2.0 + tempTime;  // y
+    msg.position[2] = 3.0 + tempTime;  // z
     msg.q[0] = 1.0;  // w
     msg.q[1] = 0.0;  // x
     msg.q[2] = 0.0;  // y
