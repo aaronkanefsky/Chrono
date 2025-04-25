@@ -60,9 +60,9 @@ void CustomHandler::Tick(double time) {
 
 
     // Print the message for debugging (optional)
-    std::cout << "Publishing CombinedMessage with timestamp: " << msg.timestamp << std::endl;
+    std::cout << "Publishing Vehicle Odometry message with timestamp: " << msg.timestamp << std::endl;
 
-    // Publish the CombinedMessage
+    // Publish the message
     m_publisher->publish(msg);
 
     m_ticker++;
@@ -70,5 +70,5 @@ void CustomHandler::Tick(double time) {
 
 
 void CustomHandler::receiveTopic(const px4_msgs::msg::ActuatorMotors::SharedPtr msg) const {
-    RCLCPP_INFO(this->get_logger(), "Received Actuator Motor data at time %f", msg->timestamp);
+    RCLCPP_INFO(this->get_logger(), "Received Actuator Motor data at time %f with data [%f, %f, %f, %f, %f, %f, %f, %f]", msg->timestamp, msg->control[0], msg->control[1], msg->control[2], msg->control[3], msg->control[4], msg->control[5], msg->control[6], msg->control[7]);
 }

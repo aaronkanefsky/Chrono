@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
     auto ros_manager = chrono_types::make_shared<ChROSManager>();
 
     // Create a custom handler (publisher & subscriber)
-    auto custom_handler = chrono_types::make_shared<CustomHandler>("vehicle_odometry", "vehicle_odometry");
+    auto custom_handler = chrono_types::make_shared<CustomHandler>("/fmu/out/vehicle_odometry", "/fmu/in/actuator_motors");
     ros_manager->RegisterHandler(custom_handler);
 
     // Initialize the ROS manager
