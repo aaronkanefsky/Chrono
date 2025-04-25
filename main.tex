@@ -1,0 +1,103 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{hyperref}
+\geometry{margin=1in}
+\titleformat{\section}{\Large\bfseries}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries}{}{0em}{}
+
+\definecolor{codegray}{gray}{0.9}
+\lstset{
+  backgroundcolor=\color{codegray},
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  frame=single,
+  showstringspaces=false,
+  tabsize=2
+}
+
+\title{Chrono-ROS 2 Integration: VehicleOdometry Publisher}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Overview}
+This project integrates the Project Chrono simulation engine with ROS 2 to publish synthetic PX4 \texttt{VehicleOdometry} data based on simulation state and listen to actuator motor commands from PX4.
+
+\section*{Key Components}
+\begin{itemize}
+    \item \texttt{CustomHandler}: A ROS 2 node that extends \texttt{ChROSHandler}.
+    \item Publishes PX4 \texttt{VehicleOdometry} messages at every simulation tick.
+    \item Subscribes to PX4 \texttt{ActuatorMotors} messages.
+\end{itemize}
+
+\section*{CustomHandler Class}
+\texttt{CustomHandler} inherits from both \texttt{ChROSHandler} and \texttt{rclcpp::Node}. It sets up a publisher and subscriber and connects simulation data to ROS 2 messages.
+
+\subsection*{Header}
+\begin{lstlisting}[language=C++]
+class CustomHandler : public ChROSHandler, public rclcpp::Node {
+public:
+    CustomHandler(const std::string& topic_pub, const std::string& topic_sub);
+    virtual bool Initialize(std::shared_ptr<ChROSInterface> interface) override;
+    virtual void Tick(double time) override;
+
+private:
+    rclcpp::Publisher<px4_msgs::msg::VehicleOdometry>::SharedPtr m_publisher;
+    rclcpp::Subscription<px4_msgs::msg::ActuatorMotors>::SharedPtr m_subscriber;
+
+    void receiveTopic(px4_msgs::msg::ActuatorMotors::SharedPtr msg) const;
+};
+\end{lstlisting}
+
+\subsection*{Tick Method}
+Publishes a dummy \texttt{VehicleOdometry} message using simulated values.
+\begin{lstlisting}[language=C++]
+void CustomHandler::Tick(double time) {
+    px4_msgs::msg::VehicleOdometry msg;
+    msg.timestamp = this->now().nanoseconds() / 1000;
+    msg.timestamp_sample = static_cast<uint64_t>(time * 1e6);
+    msg.pose_frame = px4_msgs::msg::VehicleOdometry::POSE_FRAME_NED;
+    msg.velocity_frame = px4_msgs::msg::VehicleOdometry::VELOCITY_FRAME_BODY_FRD;
+
+    msg.position[0] = 1.0;
+    msg.position[1] = 2.0;
+    msg.position[2] = 3.0;
+    msg.q[0] = 1.0; msg.q[1] = 0.0; msg.q[2] = 0.0; msg.q[3] = 0.0;
+    msg.velocity[0] = 0.1; msg.velocity[1] = 0.2; msg.velocity[2] = 0.3;
+    msg.angular_velocity[0] = 0.01;
+    msg.angular_velocity[1] = 0.02;
+    msg.angular_velocity[2] = 0.03;
+
+    m_publisher->publish(msg);
+}
+\end{lstlisting}
+
+\subsection*{Subscriber Callback}
+Logs incoming actuator data.
+\begin{lstlisting}[language=C++]
+void CustomHandler::receiveTopic(const px4_msgs::msg::ActuatorMotors::SharedPtr msg) const {
+    RCLCPP_INFO(this->get_logger(), "Received Actuator Motor data at time %f", msg->timestamp);
+}
+\end{lstlisting}
+
+\section*{Topics}
+\begin{itemize}
+    \item \texttt{/vehicle\_odometry}: Published topic
+    \item \texttt{/actuator\_controls}: Subscribed topic
+\end{itemize}
+
+\section*{Dependencies}
+\begin{itemize}
+    \item ROS 2 Galactic (or later)
+    \item PX4 \texttt{px4\_msgs} package
+    \item Project Chrono with ROS 2 integration (\texttt{chrono\_ros})
+\end{itemize}
+
+\end{document}
